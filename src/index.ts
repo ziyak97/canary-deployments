@@ -70,21 +70,21 @@ export = (app: Probot) => {
         }
         // Generate release notes
         if (coreChanges.length > 0) {
-          releaseNotes += "## Core Changes\n";
+          releaseNotes += "## Core Changes";
           for (const pr of coreChanges) {
-            releaseNotes += `• ${pr.title}: #${pr.number}\n`;
+            releaseNotes += `- ${pr.title}: #${pr.number}`;
           }
         }
         if (documentationChanges.length > 0) {
-          releaseNotes += "## Documentation Changes\n";
+          releaseNotes += "## Documentation Changes";
           for (const pr of documentationChanges) {
-            releaseNotes += `• ${pr.title}: #${pr.number}\n`;
+            releaseNotes += `- ${pr.title}: #${pr.number}`;
           }
         }
         if (miscellaneousChanges.length > 0) {
-          releaseNotes += "## Miscellaneous Changes\n";
+          releaseNotes += "## Miscellaneous Changes";
           for (const pr of miscellaneousChanges) {
-            releaseNotes += `• ${pr.title}: #${pr.number}\n`;
+            releaseNotes += `- ${pr.title}: #${pr.number}`;
           }
         }
         // Generate list of contributors
