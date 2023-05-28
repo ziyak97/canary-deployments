@@ -18,12 +18,13 @@ export = (app: Probot) => {
           const major = parseInt(match[1].substring(1));
           const minor = parseInt(match[2]);
           const patch = parseInt(match[3]);
-          const canary = latestRelease.tag_name.includes("canary") ?
-            parseInt(
-              latestRelease.tag_name.substring(
-                latestRelease.tag_name.lastIndexOf(".") + 1
+          const canary = latestRelease.tag_name.includes("canary")
+            ? parseInt(
+                latestRelease.tag_name.substring(
+                  latestRelease.tag_name.lastIndexOf(".") + 1
+                )
               )
-            ) : -1;
+            : -1;
 
           if (canary >= 0) {
             tag_name = `v${major}.${minor}.${patch}-canary.${canary + 1}`;
@@ -69,19 +70,19 @@ export = (app: Probot) => {
         }
         // Generate release notes
         if (coreChanges.length > 0) {
-          releaseNotes += "Core Changes\n";
+          releaseNotes += "## Core Changes\n";
           for (const pr of coreChanges) {
             releaseNotes += `• ${pr.title}: #${pr.number}\n`;
           }
         }
         if (documentationChanges.length > 0) {
-          releaseNotes += "Documentation Changes\n";
+          releaseNotes += "## Documentation Changes\n";
           for (const pr of documentationChanges) {
             releaseNotes += `• ${pr.title}: #${pr.number}\n`;
           }
         }
         if (miscellaneousChanges.length > 0) {
-          releaseNotes += "Miscellaneous Changes\n";
+          releaseNotes += "## Miscellaneous Changes\n";
           for (const pr of miscellaneousChanges) {
             releaseNotes += `• ${pr.title}: #${pr.number}\n`;
           }
@@ -92,9 +93,15 @@ export = (app: Probot) => {
           contributors.add(pr.user?.login);
         }
         if (contributors.size > 0) {
-          releaseNotes += "\nContributors\n";
-          for (const contributor of contributors) {
-            releaseNotes += `• @${contributor}\n`;
+          releaseNotes += "## Contributors";
+          releaseNotes += "A big thank you to our contributors ";
+          const contributorsArray = Array.from(contributors);
+          for (const [index, contributor] of contributorsArray.entries()) {
+            if (index === contributorsArray.length - 1) {
+              releaseNotes += `and @${contributor}.`;
+            } else {
+              releaseNotes += `@${contributor}, `;
+            }
           }
         }
       }
@@ -104,7 +111,7 @@ export = (app: Probot) => {
         return;
       }
 
-      const name = `${tag_name} Pre-release`;
+      const name = `${tag_name}`;
       const body = `New canary release based on ${latestRelease.tag_name}\n\n${releaseNotes}`;
       await context.octokit.repos.createRelease({
         owner,
