@@ -72,19 +72,19 @@ export = (app: Probot) => {
         if (coreChanges.length > 0) {
           releaseNotes += "## Core Changes";
           for (const pr of coreChanges) {
-            releaseNotes += `- ${pr.title}: #${pr.number}`;
+            releaseNotes += `- ${pr.title}: #${pr.number}\n`;
           }
         }
         if (documentationChanges.length > 0) {
           releaseNotes += "## Documentation Changes";
           for (const pr of documentationChanges) {
-            releaseNotes += `- ${pr.title}: #${pr.number}`;
+            releaseNotes += `- ${pr.title}: #${pr.number}\n`;
           }
         }
         if (miscellaneousChanges.length > 0) {
-          releaseNotes += "## Miscellaneous Changes";
+          releaseNotes += "## Miscellaneous Changes\n";
           for (const pr of miscellaneousChanges) {
-            releaseNotes += `- ${pr.title}: #${pr.number}`;
+            releaseNotes += `- ${pr.title}: #${pr.number}\n`;
           }
         }
         // Generate list of contributors
@@ -93,7 +93,7 @@ export = (app: Probot) => {
           contributors.add(pr.user?.login);
         }
         if (contributors.size > 0) {
-          releaseNotes += "## Contributors";
+          releaseNotes += "## Contributors\n";
           releaseNotes += "A big thank you to our contributors ";
           const contributorsArray = Array.from(contributors);
           for (const [index, contributor] of contributorsArray.entries()) {
