@@ -6,12 +6,17 @@ on:
         description: "Release type (canary or release)"
         required: true
         type: choice
-        choices: ["canary", "release"]
+        options:
+          - canary
+          - release
       semanticVersionType:
         description: "Semantic version type (major, minor, or patch)"
         required: false
         type: choice
-        choices: ["major", "minor", "patch"]
+        options:
+          - major
+          - minor
+          - patch
 jobs:
   release:
     runs-on: ubuntu-latest
