@@ -94,13 +94,18 @@ export = (app: Probot) => {
         }
         if (contributors.size > 0) {
           releaseNotes += "## Contributors\n";
-          releaseNotes += "A big thank you to our contributors ";
+          releaseNotes = "A big thank you to our ";
           const contributorsArray = Array.from(contributors);
-          for (const [index, contributor] of contributorsArray.entries()) {
-            if (index === contributorsArray.length - 1) {
-              releaseNotes += `and @${contributor}.`;
-            } else {
-              releaseNotes += `@${contributor}, `;
+          if (contributorsArray.length === 1) {
+            releaseNotes += `contributor @${contributorsArray[0]}.`;
+          } else {
+            releaseNotes += "contributors ";
+            for (const [index, contributor] of contributorsArray.entries()) {
+              if (index === contributorsArray.length - 1) {
+                releaseNotes += `and @${contributor}.`;
+              } else {
+                releaseNotes += `@${contributor}, `;
+              }
             }
           }
         }
