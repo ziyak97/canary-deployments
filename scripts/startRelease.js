@@ -147,13 +147,13 @@ async function createRelease() {
     return;
   }
 
-  const tag_name = latestCanaryRelease.tag_name.replace("-canary", "");
+  const tag_name = latestCanaryRelease.tag_name.split("-canary")[0];
   const name = `${tag_name}`;
 
   // Get all canary releases of the same version
   const version = tag_name.substring(1);
-  const canaryReleases = releases.filter(
-    (release) => release.tag_name.includes(version) && release.prerelease
+  const canaryReleases = releases.filter((release) =>
+    new RegExp(`^v${version}(-canary\\.\\d+)?$`).test(release.tag_name)
   );
 
   // Get merged pull requests between first canary release and new release
