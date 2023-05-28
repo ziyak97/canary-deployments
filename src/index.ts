@@ -70,13 +70,13 @@ export = (app: Probot) => {
         }
         // Generate release notes
         if (coreChanges.length > 0) {
-          releaseNotes += "## Core Changes";
+          releaseNotes += "## Core Changes\n";
           for (const pr of coreChanges) {
             releaseNotes += `- ${pr.title}: #${pr.number}\n`;
           }
         }
         if (documentationChanges.length > 0) {
-          releaseNotes += "## Documentation Changes";
+          releaseNotes += "## Documentation Changes\n";
           for (const pr of documentationChanges) {
             releaseNotes += `- ${pr.title}: #${pr.number}\n`;
           }
