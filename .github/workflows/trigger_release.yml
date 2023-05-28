@@ -1,4 +1,4 @@
-name: Canary Release
+name: Release
 on:
   workflow_dispatch:
     inputs:
@@ -31,4 +31,4 @@ jobs:
       - name: Run script
         run: node ./scripts/startRelease.js ${{ github.event.inputs.releaseType }} ${{ github.event.inputs.semanticVersionType }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
