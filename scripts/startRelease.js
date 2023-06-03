@@ -293,6 +293,7 @@ async function createRelease() {
   }
 
   const tag_name = latestCanaryRelease.tag_name.split("-canary")[0];
+  const name = `${tag_name}`;
 
   const lastStableRelease = await getLastStableRelease(owner, repo);
 
