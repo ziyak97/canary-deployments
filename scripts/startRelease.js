@@ -19,21 +19,49 @@ const semanticVersionType = process.argv[3];
  * @typedef {Object} Release
  * @property {string} tag_name - The tag name of the release
  * @property {string} published_at - The date and time when the release was published
+ * @property {string} name - The name of the release
+ * @property {boolean} prerelease - Whether the release is a prerelease
  */
 
 /**
- * Retrieves releases for a repository.
+ * Retrieves lastest stable release for a repository.
  *
  * @param {string} owner - The owner of the repository
  * @param {string} repo - The name of the repository
  * @returns {Promise<Array<Release>>} An array of releases for the repository
  */
-async function getReleases(owner, repo) {
+async function getLastStableRelease(owner, repo) {
+  const iterator = octokit.paginate.iterator(octokit.rest.repos.listReleases, {
+    owner,
+    repo,
+    per_page: 100,
+  });
+
+  for await (const { data: releases } of iterator) {
+    for (const release of releases) {
+      if (!release.prerelease) {
+        return release;
+      }
+    }
+  }
+}
+
+/**
+ * Get the latest release for a given repository.
+ * @async
+ * @function
+ * @param {string} owner - The owner of the repository.
+ * @param {string} repo - The name of the repository.
+ * @returns {Promise<Release>} - A Promise that resolves to the latest release object.
+ */
+async function getLastestRelease(owner, repo) {
   const releases = await octokit.paginate(octokit.repos.listReleases, {
     owner,
     repo,
+    per_page: 1,
   });
-  return releases;
+
+  return releases[0];
 }
 
 /**
@@ -45,14 +73,9 @@ async function getReleases(owner, repo) {
  * @returns {Promise<Array<PullRequest>>} An array of merged pull requests for the repository
  */
 async function getMergedPullRequests(owner, repo, published_at) {
-  const pullRequests = await octokit.paginate(octokit.pulls.list, {
-    owner,
-    repo,
-    state: "closed",
-  });
-  const mergedPullRequests = pullRequests.filter(
-    (pr) => pr.merged_at && new Date(pr.merged_at) > new Date(published_at || 0)
-  );
+  const query = `repo:${owner}/${repo} is:pr is:merged updated:>${published_at}`;
+  const response = await octokit.search.issuesAndPullRequests({ q: query });
+  const mergedPullRequests = response.data.items;
   return mergedPullRequests;
 }
 
@@ -171,8 +194,8 @@ function generateContributorsList(mergedPullRequests) {
 async function createCanaryRelease() {
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
-  const releases = await getReleases(owner, repo);
-  const latestRelease = releases[0];
+  const latestRelease = await getLastestRelease(owner, repo);
+
   let tag_name = `v0.0.0-canary.0`;
   let releaseNotes = "";
   if (latestRelease) {
@@ -181,15 +204,9 @@ async function createCanaryRelease() {
       const major = parseInt(match[1].substring(1));
       const minor = parseInt(match[2]);
       const patch = parseInt(match[3]);
-      const canary = latestRelease.tag_name.includes("canary")
-        ? parseInt(
-            latestRelease.tag_name.substring(
-              latestRelease.tag_name.lastIndexOf(".") + 1
-            )
-          )
-        : -1;
+      const canary = latestRelease.prerelease;
 
-      if (canary >= 0) {
+      if (canary) {
         tag_name = `v${major}.${minor}.${patch}-canary.${canary + 1}`;
       } else {
         // Increment version number based on semantic version type
@@ -264,31 +281,20 @@ async function createCanaryRelease() {
 async function createRelease() {
   const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 
-  const releases = await getReleases(owner, repo);
-  const latestCanaryRelease = releases.find((release) =>
-    release.tag_name.includes("canary")
-  );
+  const latestRelease = await getLastestRelease(owner, repo);
+  const latestCanaryRelease = latestRelease.prerelease ? latestRelease : null;
 
   if (!latestCanaryRelease) {
     console.log("No canary releases found for repository");
     return;
   }
 
-  const tag_name = latestCanaryRelease.tag_name.split("-canary")[0];
-  const name = `${tag_name}`;
+  const lastStableRelease = await getLastStableRelease(owner, repo);
 
-  // Get all canary releases of the same version
-  const version = tag_name.substring(1);
-  const canaryReleases = releases.filter((release) =>
-    new RegExp(`^v${version}(-canary\\.\\d*)?$`).test(release.tag_name)
-  );
-
-  // Get merged pull requests between first canary release and new release
-  const firstCanaryRelease = canaryReleases[canaryReleases.length - 1];
   const mergedPullRequests = await getMergedPullRequests(
     owner,
     repo,
-    firstCanaryRelease.published_at
+    lastStableRelease.published_at
   );
 
   // Guard clause: No merged pull requests
