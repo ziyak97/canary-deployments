@@ -204,10 +204,11 @@ async function createCanaryRelease() {
       const major = parseInt(match[1].substring(1));
       const minor = parseInt(match[2]);
       const patch = parseInt(match[3]);
-      const canary = latestRelease.prerelease;
+      const isCanary = latestRelease.prerelease;
+      const canaryVersion = isCanary ? parseInt(latestRelease.tag_name.split("canary.")[1]) : null;
 
-      if (canary) {
-        tag_name = `v${major}.${minor}.${patch}-canary.${canary + 1}`;
+      if (isCanary) {
+        tag_name = `v${major}.${minor}.${patch}-canary.${canaryVersion + 1}`;
       } else {
         // Increment version number based on semantic version type
         switch (semanticVersionType) {
