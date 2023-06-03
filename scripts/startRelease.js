@@ -73,7 +73,7 @@ async function getLastestRelease(owner, repo) {
  * @returns {Promise<Array<PullRequest>>} An array of merged pull requests for the repository
  */
 async function getMergedPullRequests(owner, repo, published_at) {
-  const query = `repo:${owner}/${repo} is:pr is:merged updated:>${published_at}`;
+  const query = `repo:${owner}/${repo} is:pr is:merged merged:>${published_at}`;
   const response = await octokit.search.issuesAndPullRequests({ q: query });
   const mergedPullRequests = response.data.items;
   return mergedPullRequests;
@@ -205,7 +205,9 @@ async function createCanaryRelease() {
       const minor = parseInt(match[2]);
       const patch = parseInt(match[3]);
       const isCanary = latestRelease.prerelease;
-      const canaryVersion = isCanary ? parseInt(latestRelease.tag_name.split("canary.")[1]) : null;
+      const canaryVersion = isCanary
+        ? parseInt(latestRelease.tag_name.split("canary.")[1])
+        : null;
 
       if (isCanary) {
         tag_name = `v${major}.${minor}.${patch}-canary.${canaryVersion + 1}`;
