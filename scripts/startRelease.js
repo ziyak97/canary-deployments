@@ -4,6 +4,30 @@ const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 const releaseType = process.argv[2];
 const semanticVersionType = process.argv[3];
 
+/**
+ * @typedef {Object} PullRequest
+ * @property {string} title - The title of the pull request
+ * @property {number} number - The number of the pull request
+ * @property {string} merged_at - The date and time when the pull request was merged
+ * @property {Object} user - The user who created the pull request
+ * @property {string} user.login - The login name of the user who created the pull request
+ * @property {Array<Object>} labels - The labels attached to the pull request
+ * @property {string} labels.name - The name of a label attached to the pull request
+ */
+
+/**
+ * @typedef {Object} Release
+ * @property {string} tag_name - The tag name of the release
+ * @property {string} published_at - The date and time when the release was published
+ */
+
+/**
+ * Retrieves releases for a repository.
+ *
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @returns {Promise<Array<Release>>} An array of releases for the repository
+ */
 async function getReleases(owner, repo) {
   const releases = await octokit.paginate(octokit.repos.listReleases, {
     owner,
@@ -12,6 +36,14 @@ async function getReleases(owner, repo) {
   return releases;
 }
 
+/**
+ * Retrieves merged pull requests for a repository.
+ *
+ * @param {string} owner - The owner of the repository
+ * @param {string} repo - The name of the repository
+ * @param {string} published_at - The date and time to retrieve merged pull requests after
+ * @returns {Promise<Array<PullRequest>>} An array of merged pull requests for the repository
+ */
 async function getMergedPullRequests(owner, repo, published_at) {
   const pullRequests = await octokit.paginate(octokit.pulls.list, {
     owner,
@@ -24,6 +56,12 @@ async function getMergedPullRequests(owner, repo, published_at) {
   return mergedPullRequests;
 }
 
+/**
+ * Groups an array of pull requests by label.
+ *
+ * @param {Array<PullRequest>} pullRequests - An array of pull requests to group by label
+ * @returns {{coreChanges: Array<PullRequest>, documentationChanges: Array<PullRequest>, miscellaneousChanges: Array<PullRequest>}} An object containing arrays of grouped pull requests by label
+ */
 function groupPullRequestsByLabel(pullRequests) {
   let coreChanges = [];
   let documentationChanges = [];
@@ -42,6 +80,14 @@ function groupPullRequestsByLabel(pullRequests) {
   return { coreChanges, documentationChanges, miscellaneousChanges };
 }
 
+/**
+ * Generates release notes from grouped pull requests.
+ *
+ * @param {Array<PullRequest>} coreChanges - An array of core changes pull requests
+ * @param {Array<PullRequest>} documentationChanges - An array of documentation changes pull requests
+ * @param {Array<PullRequest>} miscellaneousChanges - An array of miscellaneous changes pull requests
+ * @returns {string} A string containing release notes generated from grouped pull requests
+ */
 function generateReleaseNotes(
   coreChanges,
   documentationChanges,
@@ -82,6 +128,12 @@ function generateReleaseNotes(
   return releaseNotes;
 }
 
+/**
+ * Generates a list of contributors from an array of merged pull requests.
+ *
+ * @param {Array<PullRequest>} mergedPullRequests - An array of merged pull requests to generate a list of contributors from
+ * @returns {string} A string containing a list of contributors generated from an array of merged pull requests
+ */
 function generateContributorsList(mergedPullRequests) {
   let contributors = new Set();
 
@@ -182,11 +234,19 @@ async function createCanaryRelease() {
 
     // Generate list of contributors
     releaseNotes += generateContributorsList(mergedPullRequests);
-  }
-
-  if (!latestRelease) {
-    console.log("No releases found for repository");
-    return;
+  } else {
+    // No releases found for repository
+    switch (semanticVersionType) {
+      case "major":
+        tag_name = `v1.0.0-canary.0`;
+        break;
+      case "minor":
+        tag_name = `v0.1.0-canary.0`;
+        break;
+      case "patch":
+        tag_name = `v0.0.1-canary.0`;
+        break;
+    }
   }
 
   const name = `${tag_name}`;
