@@ -12,7 +12,7 @@ async function createCanaryRelease() {
     repo,
   });
   const latestRelease = releases[0];
-  let tag_name = `v13.4.4-canary.0`;
+  let tag_name = `v0.0.0-canary.0`;
   let releaseNotes = "";
   if (latestRelease) {
     const match = latestRelease.tag_name.match(/(v\d+)\.(\d+)\.(\d+)/);
@@ -56,6 +56,15 @@ async function createCanaryRelease() {
         pr.merged_at &&
         new Date(pr.merged_at) > new Date(latestRelease.published_at || 0)
     );
+
+    // Guard clause: No merged pull requests
+    if (mergedPullRequests.length === 0) {
+      console.log(
+        "No merged pull requests found between latest release and new canary release"
+      );
+      return;
+    }
+
     // Group pull requests by label
     const coreChanges = [];
     const documentationChanges = [];
@@ -168,6 +177,14 @@ async function createRelease() {
       pr.merged_at &&
       new Date(pr.merged_at) > new Date(firstCanaryRelease.published_at || 0)
   );
+
+  // Guard clause: No merged pull requests
+  if (mergedPullRequests.length === 0) {
+    console.log(
+      "No merged pull requests found between latest release and new canary release"
+    );
+    return;
+  }
 
   // Group pull requests by label
   let coreChanges = [];
