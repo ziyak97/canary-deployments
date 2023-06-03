@@ -220,7 +220,7 @@ async function createRelease() {
   // Get all canary releases of the same version
   const version = tag_name.substring(1);
   const canaryReleases = releases.filter((release) =>
-    new RegExp(`^v${version}(-canary\\.\\d+)?$`).test(release.tag_name)
+    new RegExp(`^v${version}(-canary\\.\\d*)?$`).test(release.tag_name)
   );
 
   // Get merged pull requests between first canary release and new release
