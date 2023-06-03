@@ -112,13 +112,20 @@ async function createCanaryRelease() {
         }
       }
     }
-  }
-
-  if (!latestRelease) {
-    console.log("No releases found for repository");
-    return;
-  }
-
+  } else {
+    // No releases found for repository
+    switch (semanticVersionType) {
+      case "major":
+        tag_name = `v1.0.0-canary.0`;
+        break;
+      case "minor":
+        tag_name = `v0.1.0-canary.0`;
+        break;
+      case "patch":
+        tag_name = `v0.0.1-canary.0`;
+        break;
+    }
+  };
   const name = `${tag_name}`;
   const body = `New canary release based on ${latestRelease.tag_name}\n\n${releaseNotes}`;
   await octokit.repos.createRelease({
