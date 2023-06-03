@@ -289,6 +289,8 @@ async function createRelease() {
     return;
   }
 
+  const tag_name = latestCanaryRelease.tag_name.split("-canary")[0];
+
   const lastStableRelease = await getLastStableRelease(owner, repo);
 
   const mergedPullRequests = await getMergedPullRequests(
